@@ -35,9 +35,22 @@ pipeline {
       }
     }
 
-    stage('Health-check') {
-      steps { sh 'curl -f http://localhost:5000/' }
+        stage('Health-check') {
+      steps {
+        script {
+          def ok = false
+          5.times {
+            sleep 3
+            if (sh(returnStatus: true,
+                   script: 'curl -sf http://localhost:5000/ > /dev/null') == 0) {
+              ok = true
+              echo '✅ Service is up'
+              return
+            }
+          }
+          if (!ok) { error '❌ Service did not respond with 200 OK' }
+        }
+      }
     }
-  }
-}
+
 
