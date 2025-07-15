@@ -3,8 +3,7 @@ pipeline {
 
   environment {
     REGISTRY = "docker.io"
-    IMAGE    = "kizxng/flask-cicd:${env.BUILD_NUMBER}"
-  }
+    groovy environment { REGISTRY = "docker.io" IMAGE = "tangduyenky/flask-cicd:${env.BUILD_NUMBER}" }
 
   stages {
     stage('Checkout') { steps { checkout scm } }
