@@ -12,16 +12,20 @@ pipeline {
       steps { script { docker.build("${IMAGE}") } }
     }
 
-    stage('Push image') {
+  stage('Push image') {
   steps {
-    withDockerRegistry(
-        credentialsId: 'dockerhub-creds',
-        url: 'https://index.docker.io/v1/'    // hoặc: url: ''
-    ) {
-      sh "docker push ${IMAGE}"
+    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                      usernameVariable: 'DU',
+                                      passwordVariable: 'DP')]) {
+      sh """
+        echo "$DP" | docker login -u "$DU" --password-stdin
+        docker push ${IMAGE}
+        docker logout
+      """
     }
   }
 }
+
 
 
     stage('Deploy (local)') {
