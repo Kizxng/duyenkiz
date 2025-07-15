@@ -12,21 +12,18 @@ pipeline {
       steps { script { docker.build("${IMAGE}") } }
     }
 
-  stage('Push image') {
+  stage('Build & Push image') {
   steps {
-    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
-                                      usernameVariable: 'DU',
-                                      passwordVariable: 'DP')]) {
-      sh """
-        echo "$DP" | docker login -u "$DU" --password-stdin
-        docker push ${IMAGE}
-        docker logout
-      """
+    withDockerRegistry(credentialsId: 'dockerhub-creds',   // ID token RW
+                       url: 'https://index.docker.io/v1/')  // hoặc '' mặc định
+    {
+      script {
+        def img = docker.build("${IMAGE}")   // pull base-image OK
+        img.push()                           // push tag Build_Number
+      }
     }
   }
 }
-
-
 
     stage('Deploy (local)') {
       steps {
