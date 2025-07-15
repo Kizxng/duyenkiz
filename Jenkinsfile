@@ -1,31 +1,28 @@
 pipeline {
   agent any
-
   environment {
-  REGISTRY = "docker.io"
-  IMAGE    = "tangduyenky/flask-cicd:${env.BUILD_NUMBER}"
-}
-  stages {
-    stage('Checkout') { steps { checkout scm } }
+    REGISTRY = 'docker.io'
+    IMAGE    = "tangduyenky/flask-cicd:${env.BUILD_NUMBER}"
+  }
 
-    stage('Build image') {
-      steps { script { docker.build("${IMAGE}") } }
+  stages {
+    stage('Checkout') {           // Giữ nguyên
+      steps { checkout scm }
     }
 
-  stage('Build & Push image') {
-  steps {
-    withDockerRegistry(credentialsId: 'dockerhub-creds',   // ID token RW
-                       url: 'https://index.docker.io/v1/')  // hoặc '' mặc định
-    {
-      script {
-        def img = docker.build("${IMAGE}")   // pull base-image OK
-        img.push()                           // push tag Build_Number
+    stage('Build & Push') {       // ⬅️ chỉ 1 stage duy nhất login + build + push
+      steps {
+        withDockerRegistry(credentialsId: 'dockerhub-creds',
+                           url: 'https://index.docker.io/v1/') {
+          script {
+            def img = docker.build("${IMAGE}")   // pull base image OK
+            img.push()                           // push tag
+          }
+        }
       }
     }
-  }
-}
 
-    stage('Deploy (local)') {
+    stage('Deploy (local)') {     // chạy container mới
       steps {
         sh '''
           docker rm -f flask-cicd 2>/dev/null || true
@@ -34,13 +31,11 @@ pipeline {
       }
     }
 
-    stage('Health-check') {
+    stage('Health-check') {       // kiểm tra
       steps {
-        sh 'sleep 5'
         sh 'curl -f http://localhost:5000/'
       }
     }
   }
-
-  post { success { echo '🎉 Deploy OK!' } }
 }
+
