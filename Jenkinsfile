@@ -13,13 +13,16 @@ pipeline {
     }
 
     stage('Push image') {
-      steps {
-        withDockerRegistry(credentialsId: 'dockerhub-creds',
-                           url: "https://${REGISTRY}") {
-          sh "docker push ${IMAGE}"
-        }
-      }
+  steps {
+    withDockerRegistry(
+        credentialsId: 'dockerhub-creds',
+        url: 'https://index.docker.io/v1/'    // hoặc: url: ''
+    ) {
+      sh "docker push ${IMAGE}"
     }
+  }
+}
+
 
     stage('Deploy (local)') {
       steps {
