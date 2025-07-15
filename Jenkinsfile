@@ -11,16 +11,14 @@ pipeline {
       steps { checkout scm }
     }
 
-    /* Đăng-nhập, build & push gói gọn trong 1 stage
-       xoá cấu hình cũ để chắc chắn dùng token mới mỗi lần build */
     stage('Build & Push') {
       steps {
         sh 'rm -rf $HOME/.docker || true'          // xoá cache login cũ
 
         withDockerRegistry(credentialsId: 'dockerhub-creds', url: '') {
           script {
-            def img = docker.build("${IMAGE}")     // tự pull python:3.12-slim
-            img.push()                             // đẩy image mới lên Hub
+            def img = docker.build("${IMAGE}")     // pull + build
+            img.push()                             // push lên Hub
           }
         }
       }
@@ -35,12 +33,12 @@ pipeline {
       }
     }
 
-        stage('Health-check') {
+    stage('Health-check') {
       steps {
         script {
           def ok = false
           5.times {
-            sleep 3
+            sleep 3                                 // đợi 3 s
             if (sh(returnStatus: true,
                    script: 'curl -sf http://localhost:5000/ > /dev/null') == 0) {
               ok = true
@@ -48,9 +46,12 @@ pipeline {
               return
             }
           }
-          if (!ok) { error '❌ Service did not respond with 200 OK' }
+          if (!ok) {
+            error '❌ Service did not respond with 200 OK in 15 s'
+          }
         }
       }
     }
-
+  }
+}
 
