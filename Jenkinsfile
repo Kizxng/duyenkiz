@@ -2,9 +2,9 @@ pipeline {
   agent any
 
   environment {
-    REGISTRY = "docker.io"
-    groovy environment { REGISTRY = "docker.io" IMAGE = "tangduyenky/flask-cicd:${env.BUILD_NUMBER}" }
-
+  REGISTRY = "docker.io"
+  IMAGE    = "tangduyenky/flask-cicd:${env.BUILD_NUMBER}"
+}
   stages {
     stage('Checkout') { steps { checkout scm } }
 
